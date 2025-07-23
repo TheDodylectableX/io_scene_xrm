@@ -10,9 +10,7 @@ class SRM():
         """
         Construct a new instance of `SRM`.
 
-        This model is a model used in DEATHLOOP or Dishonored 2/DoTO as a static mesh.
-
-        Class contains information about the model, its sub-mesh count, and the mesh data itself.
+        This model format is used in the two Soul Reaver remasters.
         """
 
         # Class init stuff
@@ -71,70 +69,73 @@ class SRM():
         magic = reader.read_string(4)
         print(f"Magic: {magic}")
 
-        version = reader.uint32()
-        print(f"Model Version: {version}")
+        shaderCount = reader.uint32()
+        print(f"Shader Count: {shaderCount}")
 
-        reader.skip(24) # Repeated face counts and reserved
-
-        header_face_count_A = reader.uint32()
-        header_face_count_B = reader.uint32()
-
-        header_unk_val = reader.uint32()
-
-        header_face_count_C = reader.uint32()
-
-        reader.skip(4) # Repeated face counts and reserved
-
-        if version == 2:
-            print("Model Version is 2, skipping unknown data")
-            reader.skip(96)
-
-        if version == 3:
-            print("Model Version is 3, skipping unknown data")
-            reader.skip(140)
+        for (_) in range(shaderCount):
+            shaderType = reader.uint32()
+            print(f"Shader Type: {shaderType}")
+            shaderParameters = reader.vec4f()
+            print(f"Shader Parameters: {shaderParameters}")
+            opaqueOffset = reader.uint32()
+            print(f"Opaque Offset: {opaqueOffset}")
+            opaqueLength = reader.uint32()
+            print(f"Opaque Length: {opaqueLength}")
+            alphaOffset = reader.uint32()
+            print(f"Alpha Offset: {alphaOffset}")
+            alphaLength = reader.uint32()
+            print(f"Alpha Length: {alphaLength}")
+            additiveOffset = reader.uint32()
+            print(f"Additive Offset: {additiveOffset}")
+            additiveLength = reader.uint32()
+            print(f"Additive Length: {additiveLength}")
 
         textureCount = reader.uint32()
-        print(f"\nTexture Count: {textureCount}")
+        print(f"\nMaterial Count: {textureCount}")
 
         textures = []
-
         for (_) in range(textureCount):
             # Read the raw string
-            texture = reader.read_string(32)
+            texture = reader.read_string(31)
+            textureFlag = reader.ubyte()
             
             # Remove non-printable characters
             sanitized_texture = ''.join(c for c in texture.strip() if c.isprintable())
             
             # Print the sanitized string
-            print(f"  Texture: {sanitized_texture}.DDS")
+            print(f"  Material: {sanitized_texture}")
             
             # Append the sanitized string to the list
             textures.append(sanitized_texture)
 
         self.texture_data = textures
 
-        reader.skip(4) # Reserved
+        # Reserved
+        reader.skip(4)
+
+        # ==========================================================================================================================================================
+        # I have no idea what this section is supposed to be but it seems like it's possibly something for collisions or hit detection?
+        # I don't know how it works at the moment but the floating point values seem to represent the outline of a model, Not sure what the bytes are supposed to be
+        # And this is not on Tomb Raider Remastered, It's only on this game
+        # ==========================================================================================================================================================
 
         header_unk_floats = []
+        for (_) in (range(384)):
+            header_unk_float = reader.float32()
 
-        if header_face_count_A == 88500:
-            for (_) in (range(684)):
-                header_unk_float = reader.float32()
+            header_unk_floats.append(header_unk_float)
 
-                header_unk_floats.append(header_unk_float)
-        else:
-            for (_) in (range(384)):
-                header_unk_float = reader.float32()
+        header_unk_bytes = []
+        for (_) in (range(128)):
+            header_unk_byte = reader.ubyte()
 
-                header_unk_floats.append(header_unk_float)
+            header_unk_bytes.append(header_unk_byte)
 
-        if header_face_count_A == 88500:
-            reader.skip(132) # No idea
-        else:
-            reader.skip(128) # No idea
+        # ==============================================================================================================================
 
         vertexCount = reader.uint32()
         print(f"\nVertex Count: {vertexCount}")
+
         faceCount = reader.uint32()
         print(f"Face Count: {faceCount}")
 
@@ -189,7 +190,8 @@ class SRM():
 
             uv.append([u, v])
 
-            reader.skip(4) # Reserved
+            # Reserved
+            reader.skip(4)
 
         # --------------------------------------------------------------------------------------------------------
 
@@ -198,7 +200,6 @@ class SRM():
         # ------
 
         faces = []
-
         for (_) in (range(faceCount // 3)):
             faces.append(reverse_vector(reader.vec3us()))
 

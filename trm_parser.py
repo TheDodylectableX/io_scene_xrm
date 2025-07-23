@@ -4,15 +4,15 @@ from .readers import Reader
 from .bpy_util_funcs import *
 
 class TRM():
-    """ TRM class. Used for Tomb Raider 1-3 models that use `*.TRM` files. """
+    """ TRM class. Used for Tomb Raider 1-5 models that use `*.TRM` files. """
     # Class constructor.
     def __init__(self, file_path: str, custom_normals: bool = False, random_material_colors: bool = True, texture_import: bool = True):
         """
         Construct a new instance of `TRM`.
 
-        This model is a model used in DEATHLOOP or Dishonored 2/DoTO as a static mesh.
+        This model is used in the five Tomb Raider remasters
 
-        Class contains information about the model, its sub-mesh count, and the mesh data itself.
+        Hand/Head models are currently unsupported.
         """
 
         # Class init stuff
@@ -71,19 +71,26 @@ class TRM():
         magic = reader.read_string(4)
         print(f"Magic: {magic}")
 
-        version = reader.uint32()
-        print(f"Model Version: {version}")
+        shaderCount = reader.uint32()
+        print(f"Shader Count: {shaderCount}")
 
-        reader.skip(24) # Repeated face counts and reserved
-
-        header_face_count_A = reader.uint32()
-        header_face_count_B = reader.uint32()
-
-        header_unk_val = reader.uint32()
-
-        header_face_count_C = reader.uint32()
-
-        reader.skip(4) # Repeated face counts and reserved
+        for (_) in range(shaderCount):
+            shaderType = reader.uint32()
+            print(f"Shader Type: {shaderType}")
+            shaderParameters = reader.vec4f()
+            print(f"Shader Parameters: {shaderParameters}")
+            opaqueOffset = reader.uint32()
+            print(f"Opaque Offset: {opaqueOffset}")
+            opaqueLength = reader.uint32()
+            print(f"Opaque Length: {opaqueLength}")
+            alphaOffset = reader.uint32()
+            print(f"Alpha Offset: {alphaOffset}")
+            alphaLength = reader.uint32()
+            print(f"Alpha Length: {alphaLength}")
+            additiveOffset = reader.uint32()
+            print(f"Additive Offset: {additiveOffset}")
+            additiveLength = reader.uint32()
+            print(f"Additive Length: {additiveLength}")
 
         textureCount = reader.uint32()
         print(f"\nTexture Count: {textureCount}")
@@ -96,10 +103,21 @@ class TRM():
 
             textures.append(str(texture_num))
 
-        reader.skip(6) # Reserved
+        # Dynamically skip padding made of consecutive zero bytes (up to a safe limit)
+        zero_count = 0
+
+        # We'll scan ahead until we find a non-zero byte
+        while reader.offset < reader.length:
+            if reader.ubyte() != 0:
+                reader.seek(reader.tell() - 1)  # Rewind one byte so the next read is correct
+                break
+            zero_count += 1
+
+        print(f"Skipped {zero_count} padding byte(s)")
 
         faceCount = reader.uint32()
         print(f"\nFace Count: {faceCount}")
+
         vertexCount = reader.uint32()
         print(f"Vertex Count: {vertexCount}")
 
@@ -114,7 +132,16 @@ class TRM():
         for (_) in (range(faceCount // 3)):
             faces.append(reverse_vector(reader.vec3us()))
 
-        reader.skip(2) # Reserved
+        # Dynamically skip padding made of consecutive zero bytes (up to a safe limit)
+        zero_count_2 = 0
+
+        while reader.offset < reader.length:
+            if reader.ubyte() != 0:
+                reader.seek(reader.tell() - 1)  # Rewind one byte so the next read is correct
+                break
+            zero_count_2 += 1
+
+        print(f"Skipped {zero_count_2} padding byte(s)")
 
         # --------------------------------------------------------------------------------------------------------
 

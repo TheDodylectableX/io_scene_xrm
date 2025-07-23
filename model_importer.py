@@ -52,7 +52,7 @@ def import_sr_model(file_path: str, use_custom_normals: bool = False, assign_mat
     mesh = bpy.data.meshes.new(name=mesh_name)
     obj = bpy.data.objects.new(mesh_name, mesh)
     bpy.context.scene.collection.objects.link(obj)
-    obj.scale = (0.10, 0.10, 0.10)
+    # obj.scale = (0.10, 0.10, 0.10)
 
     # Build the mesh (vertices, faces, normals, UVs, etc.)
     build_mesh_from_data(mesh, obj, model_data, use_custom_normals, assign_material_colors)
@@ -154,8 +154,8 @@ def import_tr_model(file_path: str, use_custom_normals: bool = False, assign_mat
     mesh = bpy.data.meshes.new(name=mesh_name)
     obj = bpy.data.objects.new(mesh_name, mesh)
     bpy.context.scene.collection.objects.link(obj)
-    obj.rotation_euler[0] += math.radians(-90)
-    obj.scale = (0.10, 0.10, 0.10)
+    # obj.rotation_euler[0] += math.radians(-90)
+    # obj.scale = (0.10, 0.10, 0.10)
 
     # Build the mesh (vertices, faces, normals, UVs, etc.)
     build_mesh_from_data(mesh, obj, model_data, use_custom_normals, assign_material_colors)

@@ -56,7 +56,7 @@ def reverse_vector(vector: list | tuple) -> tuple:
 
 # Take the XYZ of a mesh's normals and divide them by 127 (Their maximum range)
 def convert_vertex_normal(nx: int, ny: int, nz: int) -> tuple[float, float, float]:
-    """Takes the XYZ of the normals and divides them by 127 to convert them from signed bytes to floats so Blender can parse them."""
+    """Takes the XYZ of the normals and subtracts them by 127 to convert them from signed bytes to floats so Blender can parse them."""
     nx_conv = nx - 127
     ny_conv = ny - 127
     nz_conv = nz - 127
