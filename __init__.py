@@ -42,60 +42,54 @@ bl_info = {
 # Oooh, fancy!
 # --------------
 
-# """The master list of custom icons the plugin uses."""
+# Register custom icons
+def register_icons() -> None:
+    """Register the custom icon images that our plugin uses!"""
+    global custom_icons
 
-# # Register custom icons
-# def register_icons() -> None:
-#     """Register the custom icon images that our plugin uses!"""
-#     global custom_icons
-#     import os, bpy.utils.previews
+    script_dir = os.path.dirname(__file__)
+    icon_dir = os.path.join(script_dir, "icons")
+    pcoll = bpy.utils.previews.new()
 
-#     script_dir = os.path.dirname(__file__)
-#     icon_dir = os.path.join(script_dir, "icons")
+    # Register every image we got
+    for icon_name in ["SRX", "TRX"]:
+        path = os.path.join(icon_dir, icon_name + ".png")
+        if os.path.exists(path):
+            pcoll.load(icon_name, path, 'IMAGE')
 
-#     pcoll = bpy.utils.previews.new()
+    custom_icons = pcoll
 
-#     # Read all icons in the folder
-#     image_file_list = os.listdir(icon_dir)
+# Unregister custom icons
+def unregister_icons() -> None:
+    """Unregister the custom icons we've loaded."""
+    if (custom_icons):
+        bpy.utils.previews.remove(custom_icons)
 
-#     # Register every image we got
-#     for (image) in (image_file_list):
-#         shorthand = image.split(".")[0]
-#         pcoll.load(shorthand, os.path.join(icon_dir, shorthand + ".png"), 'IMAGE')
-
-#     custom_icons = pcoll
-
-# # Unregister custom icons
-# def unregister_icons() -> None:
-#     """Unregister the custom icons we've loaded."""
-#     if (custom_icons):
-#         bpy.utils.previews.remove(custom_icons)
-
-# # Get an icon from our list of custom icons
-# def get_icon(icon_name):
-#     """Get an icon from the list of custom icons!"""
-#     if (not custom_icons):
-#         return None
+# Get an icon from our list of custom icons
+def get_icon(icon_name):
+    """Get an icon from the list of custom icons!"""
+    if (not custom_icons):
+        return None
     
-#     if (icon_name in custom_icons):
-#         return custom_icons[icon_name]
+    if (icon_name in custom_icons):
+        return custom_icons[icon_name]
     
-#     return None
+    return None
 
-# # Get an icon from our list of custom icons by its ID!
-# def get_icon_by_id(icon_name):
-#     """Get an icon from the list of custom icons by its ID."""
-#     if (not custom_icons):
-#         print(f"Missing icon {out_icon}, icons were not loaded.")
-#         return 0
+# Get an icon from our list of custom icons by its ID!
+def get_icon_by_id(icon_name):
+    """Get an icon from the list of custom icons by its ID."""
+    if (not custom_icons):
+        print(f"Missing icon {out_icon}, icons were not loaded.")
+        return 0
     
-#     out_icon = get_icon(icon_name)
+    out_icon = get_icon(icon_name)
 
-#     if (not out_icon):
-#         print(f"Icon {out_icon} was missing")
-#         return 0
+    if (not out_icon):
+        print(f"Icon {out_icon} was missing")
+        return 0
     
-#     return out_icon.icon_id
+    return out_icon.icon_id
 
 # -------------------------------------------------------------------------
 
@@ -244,16 +238,17 @@ class ExportTRRMesh(Operator, ImportHelper):
 # --------------------------------------------------------------------------------------------------------
         
 def menu_func_import(self, context):
-    self.layout.operator(ImportSRRMesh.bl_idname, text="Soul Reaver I-II Remastered Mesh (.SRM)")
-    self.layout.operator(ImportTRRMesh.bl_idname, text="Tomb Raider I-V Remastered Mesh (.TRM)")
+    self.layout.operator(ImportSRRMesh.bl_idname, text="Soul Reaver I-II Remastered Mesh (.SRM)", icon_value=get_icon_by_id("SRX"))
+    self.layout.operator(ImportTRRMesh.bl_idname, text="Tomb Raider I-V Remastered Mesh (.TRM)", icon_value=get_icon_by_id("TRX"))
 
 def menu_func_export(self, context):
-    self.layout.operator(ExportSRRMesh.bl_idname, text="Soul Reaver I-II Remastered Mesh (.SRM)")
-    self.layout.operator(ExportTRRMesh.bl_idname, text="Tomb Raider I-V Remastered Mesh (.TRM)")
+    self.layout.operator(ExportSRRMesh.bl_idname, text="Soul Reaver I-II Remastered Mesh (.SRM)", icon_value=get_icon_by_id("SRX"))
+    self.layout.operator(ExportTRRMesh.bl_idname, text="Tomb Raider I-V Remastered Mesh (.TRM)", icon_value=get_icon_by_id("TRX"))
 
 # -------------------------------------------------------------------------
 
 def register():
+    register_icons()
     bpy.utils.register_class(ImportSRRMesh)
     bpy.utils.register_class(ImportTRRMesh)
     bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
@@ -262,6 +257,7 @@ def register():
     bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
 
 def unregister():
+    unregister_icons()
     bpy.utils.unregister_class(ImportSRRMesh)
     bpy.utils.unregister_class(ImportTRRMesh)
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
