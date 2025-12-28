@@ -111,25 +111,41 @@ class SRM():
         self.texture_data = textures
 
         # Reserved
-        reader.skip(4)
+        extraBoneCount = reader.uint32()
+        print(f"\nBone Count: {32 + extraBoneCount}")
 
         # ==========================================================================================================================================================
         # I have no idea what this section is supposed to be but it seems like it's possibly something for collisions or hit detection?
         # I don't know how it works at the moment but the floating point values seem to represent the outline of a model, Not sure what the bytes are supposed to be
         # And this is not on Tomb Raider Remastered, It's only on this game
+        #
+        # THIS IS ACTUALLY BONE DATA BUT I HAVE NO IDEA HOW ITS PROPERLY STRUCTURED SO I'LL JUST SKIP OVER IT
         # ==========================================================================================================================================================
 
-        header_unk_floats = []
-        for (_) in (range(384)):
-            header_unk_float = reader.float32()
+        boneMatrices = []
+        for (_) in (range(32 + extraBoneCount)):
+            bone_a = reader.vec3f()
+            bone_b = reader.vec3f()
+            bone_c = reader.vec3f()
+            bone_d = reader.vec3f()
 
-            header_unk_floats.append(header_unk_float)
+        # --- DYNAMIC SENTINEL CHECK ---
+        # Peek at the next 4 bytes without permanently moving the cursor
+        current_pos = reader.tell()
+        next_uint = reader.uint32()
 
-        header_unk_bytes = []
+        if next_uint == 2147483648: # 0x80000000 / -0.0
+            print(f"Found sentinel at {current_pos}, skipping...")
+            # Cursor is already moved forward 4 bytes by uint32(), so do nothing
+        else:
+            # If it's NOT the sentinel, rewind so we don't skip the first boneFlag
+            reader.seek(current_pos)
+
+        boneFlags = []
         for (_) in (range(128)):
-            header_unk_byte = reader.ubyte()
+            boneFlag = reader.ubyte()
 
-            header_unk_bytes.append(header_unk_byte)
+            boneFlags.append(boneFlag)
 
         # ==============================================================================================================================
 
