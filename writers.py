@@ -224,7 +224,7 @@ class Writer(object):
         """ Write three signed 8 bit numbers, and return them as a 4-point vector as a tuple. Advances the position forward by 3 bytes. """
         return self.write("3b", *value)
     
-    def vec3sb(self, value: tuple[int, int, int]) -> tuple[int, int, int]:
+    def vec3ub(self, value: tuple[int, int, int]) -> tuple[int, int, int]:
         """ Write three unsigned 8 bit numbers, and return them as a 4-point vector as a tuple. Advances the position forward by 3 bytes. """
         return self.write("3B", *value)
     

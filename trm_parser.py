@@ -11,8 +11,6 @@ class TRM():
         Construct a new instance of `TRM`.
 
         This model is used in the five Tomb Raider remasters
-
-        Hand/Head models are currently unsupported.
         """
 
         # Class init stuff
@@ -106,17 +104,50 @@ class TRM():
         # Dynamically skip padding made of consecutive zero bytes (up to a safe limit)
         zero_count = 0
 
-        # We'll scan ahead until we find a non-zero byte
         while reader.offset < reader.length:
             if reader.ubyte() != 0:
                 reader.seek(reader.tell() - 1)  # Rewind one byte so the next read is correct
                 break
             zero_count += 1
 
-        print(f"Skipped {zero_count} padding byte(s)")
+        # Armature stuff
+        is_head_model = "HEAD" in self.model_file.upper()
+
+        if is_head_model:
+            print("Detected head model - Parsing Bone and Animation structure...")
+
+            boneCount = reader.uint32()
+            print(f"\nBone Count: {boneCount}")
+
+            for (_) in range(boneCount):
+                bone_a = reader.vec3f()
+                bone_b = reader.vec3f()
+                bone_c = reader.vec3f()
+                bone_d = reader.vec3f()
+
+            # REALLY SCUFFED STRUCTURE FOR ANIMATION STUFF I DON'T REALLY CARE ABOUT
+            animationRelatedCountA = reader.uint32()
+            for (_) in range(animationRelatedCountA):
+                animationRelatedValueA = reader.uint32()
+                animationRelatedValueB = reader.uint32()
+            
+            animationFrameCount = reader.uint32()
+            for (_) in range(animationFrameCount):
+                animationFrame = reader.uint32()
+
+            animationRelatedB = reader.ushort()
+            animationRelatedC = reader.ushort()
+            if (animationFrameCount * animationRelatedB > 0):
+                for (_) in range(animationFrameCount * animationRelatedB):
+                    bone_a2 = reader.vec3f()
+                    bone_b2 = reader.vec3f()
+                    bone_c2 = reader.vec3f()
+                    bone_d2 = reader.vec3f()
+        else:
+            print("Standard model detected - Skipping Bone and Animation structure.")
 
         faceCount = reader.uint32()
-        print(f"\nFace Count: {faceCount}")
+        print(f"Face Count: {faceCount}")
 
         vertexCount = reader.uint32()
         print(f"Vertex Count: {vertexCount}")
