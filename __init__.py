@@ -186,19 +186,30 @@ class ExportSRRMesh(Operator, ImportHelper):
         maxlen=1024,
     ) # type: ignore
 
-    version: EnumProperty(
-        name="Version",
-        description="Choose the version of the format to export in, Set to V1 by Default",
-        items=(
-            ('V1', "Version 1", "Export your texture(s) in R8_UNORM format"),
-            ('V2', "Version 2", "Export your texture(s) in R16_FLOAT format"),
-            ('V3', "Version 3", "Export your texture(s) in R32_FLOAT format"),
-        ),
-        default='V1',
-    ) # type: ignore
-
     def execute(self, context):
-        return export_sr_model(self.filepath, self.version)
+        # The 'filepath' from ImportHelper is the REFERENCE file the user picked
+        reference_path = self.filepath
+        
+        # Get the active object to determine the new filename
+        obj = context.active_object
+        if not obj:
+            self.report({'ERROR'}, "No active object selected to export.")
+            return {'CANCELLED'}
+
+        # Derive the directory and create the new filename, We take the folder from the reference but the name from the Blender object
+        output_dir = os.path.dirname(reference_path)
+        
+        # Sanitize the object's name (Remove special characters that the OS might hate)
+        clean_obj_name = "".join([c for c in obj.name if c.isalnum() or c in (' ', '_', '-')]).rstrip()
+        output_filename = f"{clean_obj_name}.SRM"
+        
+        # Combine into the final export path
+        final_export_path = os.path.join(output_dir, output_filename)
+
+        print(f"Reference SRM: {reference_path}")
+        print(f"Exporting To: {final_export_path}")
+
+        return export_sr_model(self, context, final_export_path, reference_path)
 
 # -------------------------------------------------------------------------
 
@@ -216,24 +227,19 @@ class ExportTRRMesh(Operator, ImportHelper):
     ) # type: ignore
 
     filter_glob: StringProperty(
-        default="*.SRM",
+        default="*.TRM",
         options={'HIDDEN'},
         maxlen=1024,
     ) # type: ignore
 
-    version: EnumProperty(
-        name="Version",
-        description="Choose the version of the format to export in, Set to V1 by Default",
-        items=(
-            ('V1', "Version 1", "Export your texture(s) in R8_UNORM format"),
-            ('V2', "Version 2", "Export your texture(s) in R16_FLOAT format"),
-            ('V3', "Version 3", "Export your texture(s) in R32_FLOAT format"),
-        ),
-        default='V1',
+    head_model: BoolProperty(
+        name="Head Model",
+        description="Export as a head model instead.",
+        default=False,
     ) # type: ignore
 
     def execute(self, context):
-        return export_tr_model(self.filepath, self.version)
+        return export_tr_model(self, context, self.head_model, self.filepath)
 
 # --------------------------------------------------------------------------------------------------------
         

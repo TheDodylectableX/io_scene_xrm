@@ -116,6 +116,21 @@ class Writer(object):
         else:
             self.file.seek(position)
 
+    # Padding the current offset at the cursor with null bytes
+    def align(self, boundary: int = 4):
+            """
+            Pads the file with null bytes until the current offset is a multiple of 'boundary'.
+            """
+            current_pos = self.file.tell()
+            
+            # The modulo (%) gives the remainder. (boundary - remainder) % boundary
+            # gives the exact number of null bytes needed to 'round up' to the next stride.
+            padding_needed = (boundary - (current_pos % boundary)) % boundary
+            
+            if padding_needed > 0:
+                # We write actual null bytes to the binary stream
+                self.file.write(b'\x00' * padding_needed)
+
     # -------------------------------
 
     # Write an ASCII string.

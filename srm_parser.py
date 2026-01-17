@@ -103,14 +103,14 @@ class SRM():
             sanitized_texture = ''.join(c for c in texture.strip() if c.isprintable())
             
             # Print the sanitized string
-            print(f"  Material: {sanitized_texture}")
+            print(f"  Material: {sanitized_texture}\n")
+            print(f"  Material Flag: {textureFlag}")
             
             # Append the sanitized string to the list
             textures.append(sanitized_texture)
 
         self.texture_data = textures
 
-        # Reserved
         extraBoneCount = reader.uint32()
         print(f"\nBone Count: {32 + extraBoneCount}")
 
@@ -119,7 +119,8 @@ class SRM():
         # I don't know how it works at the moment but the floating point values seem to represent the outline of a model, Not sure what the bytes are supposed to be
         # And this is not on Tomb Raider Remastered, It's only on this game
         #
-        # THIS IS ACTUALLY BONE DATA BUT I HAVE NO IDEA HOW ITS PROPERLY STRUCTURED SO I'LL JUST SKIP OVER IT
+        # THIS IS ACTUALLY BONE DATA OF THE OLD MODEL SKELETON + HD MODEL SKELETON BUT I HAVE NO IDEA HOW ITS PROPERLY STRUCTURED SO I'LL JUST SKIP OVER IT
+        # SUPPOSEDLY ONLY CARRIES LOCATION VECTORS
         # ==========================================================================================================================================================
 
         boneMatrices = []
@@ -129,16 +130,16 @@ class SRM():
             bone_c = reader.vec3f()
             bone_d = reader.vec3f()
 
-        # --- DYNAMIC SENTINEL CHECK ---
-        # Peek at the next 4 bytes without permanently moving the cursor
+        # --- FINAL BONE TRANSFORM CHECK ---
+        # Peek at the next 4 bytes without permanently moving the cursor, really hacky solution
         current_pos = reader.tell()
         next_uint = reader.uint32()
 
         if next_uint == 2147483648: # 0x80000000 / -0.0
-            print(f"Found sentinel at {current_pos}, skipping...")
+            print(f"Found bone transform at {current_pos}, skipping...")
             # Cursor is already moved forward 4 bytes by uint32(), so do nothing
         else:
-            # If it's NOT the sentinel, rewind so we don't skip the first boneFlag
+            # If it's NOT the bone transform, rewind so we don't skip the first boneFlag
             reader.seek(current_pos)
 
         boneFlags = []
