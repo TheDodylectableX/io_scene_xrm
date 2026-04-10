@@ -25,7 +25,7 @@ from bpy.types import Operator
 
 # Plugin Information / Metadata
 bl_info = {
-    "name": "Aspyr | Saber Remasters Modding Plugin",
+    "name": "Legacy of Kain and Tomb Raider Remasters Modding Plugin",
     "description": "Import and export models from/to the Tomb Raider and Soul Reaver remasters",
     "author": "Dodylectable",
     "blender": (4, 0, 0),
@@ -52,7 +52,7 @@ def register_icons() -> None:
     pcoll = bpy.utils.previews.new()
 
     # Register every image we got
-    for icon_name in ["SRX", "TRX"]:
+    for icon_name in ["SR3", "SRX", "TRX"]:
         path = os.path.join(icon_dir, icon_name + ".png")
         if os.path.exists(path):
             pcoll.load(icon_name, path, 'IMAGE')
@@ -99,7 +99,7 @@ def get_icon_by_id(icon_name):
 
 class ImportSRRMesh(Operator, ImportHelper):
     bl_idname = "import_srr.mesh"
-    bl_label = "Soul Reaver I-II Remastered Mesh (.SRM)"
+    bl_label = "Legacy of Kain: Soul Reaver I-II Remastered Mesh (.SRM)"
     bl_options = {'REGISTER', 'UNDO'}
 
     filename_ext = ".SRM"
@@ -108,6 +108,12 @@ class ImportSRRMesh(Operator, ImportHelper):
         default="*.SRM",
         options={'HIDDEN'},
         maxlen=1024,
+    ) # type: ignore
+
+    import_skeleton: BoolProperty(
+        name="Import Skeleton",
+        description="Import the model's skeleton.",
+        default=True,
     ) # type: ignore
 
     custom_normals: BoolProperty(
@@ -129,7 +135,55 @@ class ImportSRRMesh(Operator, ImportHelper):
     ) # type: ignore
 
     def execute(self, context):
-        return import_sr_model(self.filepath, self.custom_normals, self.assign_material_colors, self.import_textures)
+        return import_sr_model(self.filepath, GAME_SRX, self.import_skeleton, True, self.custom_normals, self.assign_material_colors, self.import_textures)
+
+# -------------------------------------------------------------------------
+
+class ImportSR3RMesh(Operator, ImportHelper):
+    bl_idname = "import_sr3r.mesh"
+    bl_label = "Legacy of Kain: Defiance Remastered Mesh (.SRM)"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    filename_ext = ".SRM"
+
+    filter_glob: StringProperty(
+        default="*.SRM",
+        options={'HIDDEN'},
+        maxlen=1024,
+    ) # type: ignore
+    
+    import_skeleton: BoolProperty(
+        name="Import Skeleton",
+        description="Import the model's skeleton.",
+        default=True,
+    ) # type: ignore
+
+    import_lods: BoolProperty(
+        name="Import LODs",
+        description="Import the model's LODs. (If it has any)",
+        default=True,
+    ) # type: ignore
+
+    custom_normals: BoolProperty(
+        name="Custom Normals",
+        description="Rather than using the original normals, re-calculate them when the meshes are created. (Looks smoother)",
+        default=False,
+    ) # type: ignore
+
+    assign_material_colors: BoolProperty(
+        name="Assign Material Colors",
+        description="Assign random colors to the model's materials to help with distingushing submeshes.",
+        default=True,
+    ) # type: ignore
+
+    import_textures: BoolProperty(
+        name="Import Textures",
+        description="Import the model's textures while we're at it. IMPORTANT: You must be importing from the game's directory for it to work properly.",
+        default=True,
+    ) # type: ignore
+
+    def execute(self, context):
+        return import_sr_model(self.filepath, GAME_SR3, self.import_skeleton, self.import_lods, self.custom_normals, self.assign_material_colors, self.import_textures)
 
 # -------------------------------------------------------------------------
 
@@ -169,13 +223,49 @@ class ImportTRRMesh(Operator, ImportHelper):
 
 # --------------------------------------------------------------------------------------------------------
 
+class ImportAoDRMesh(Operator, ImportHelper):
+    bl_idname = "import_aodr.mesh"
+    bl_label = "Tomb Raider: Angel of Darkness Remastered Mesh (.CHR)"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    filename_ext = ".CHR"
+
+    filter_glob: StringProperty(
+        default="*.CHR",
+        options={'HIDDEN'},
+        maxlen=1024,
+    ) # type: ignore
+
+    custom_normals: BoolProperty(
+        name="Custom Normals",
+        description="Rather than using the original normals, re-calculate them when the meshes are created. (Looks smoother)",
+        default=False,
+    ) # type: ignore
+
+    assign_material_colors: BoolProperty(
+        name="Assign Material Colors",
+        description="Assign random colors to the model's materials to help with distingushing submeshes.",
+        default=True,
+    ) # type: ignore
+
+    import_textures: BoolProperty(
+        name="Import Textures",
+        description="Import the model's textures while we're at it. IMPORTANT: You must be importing from the game's directory for it to work properly.",
+        default=True,
+    ) # type: ignore
+
+    def execute(self, context):
+       return import_aodr_model(self.filepath, self.custom_normals, self.assign_material_colors, self.import_textures)
+
+# --------------------------------------------------------------------------------------------------------
+
 # ==========
 # EXPORTERS
 # ==========
 
 class ExportSRRMesh(Operator, ImportHelper):
     bl_idname = "export_srr.mesh"
-    bl_label = "Soul Reaver I-II Remastered Mesh (.SRM)"
+    bl_label = "Legacy of Kain: Soul Reaver I-II Remastered Mesh (.SRM)"
     bl_options = {'REGISTER', 'UNDO'}
 
     filename_ext = ".SRM"
@@ -209,7 +299,53 @@ class ExportSRRMesh(Operator, ImportHelper):
         print(f"Reference SRM: {reference_path}")
         print(f"Exporting To: {final_export_path}")
 
-        return export_sr_model(self, context, final_export_path, reference_path)
+        return export_sr_model(self, context, final_export_path, reference_path, GAME_SRX)
+
+# -------------------------------------------------------------------------
+
+class ExportSR3RMesh(Operator, ImportHelper):
+    bl_idname = "export_sr3r.mesh"
+    bl_label = "Legacy of Kain: Defiance Remastered Mesh (.SRM)"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    filename_ext = ".SRM"
+
+    filter_glob: StringProperty(
+        default="*.SRM",
+        options={'HIDDEN'},
+        maxlen=1024,
+    ) # type: ignore
+
+    export_lods: BoolProperty(
+        name="Export LODs",
+        description="Export LODs for the model. (All meshes in the scene will be exported!)",
+        default=True,
+    ) # type: ignore
+
+    def execute(self, context):
+        # The 'filepath' from ImportHelper is the REFERENCE file the user picked
+        reference_path = self.filepath
+        
+        # Get the active object to determine the new filename
+        obj = context.active_object
+        if not obj:
+            self.report({'ERROR'}, "No active object selected to export.")
+            return {'CANCELLED'}
+
+        # Derive the directory and create the new filename, We take the folder from the reference but the name from the Blender object
+        output_dir = os.path.dirname(reference_path)
+        
+        # Sanitize the object's name (Remove special characters that the OS might hate)
+        clean_obj_name = "".join([c for c in obj.name if c.isalnum() or c in (' ', '_', '-')]).rstrip()
+        output_filename = f"{clean_obj_name}.SRM"
+        
+        # Combine into the final export path
+        final_export_path = os.path.join(output_dir, output_filename)
+
+        print(f"Reference SRM: {reference_path}")
+        print(f"Exporting To: {final_export_path}")
+
+        return export_sr3_model(self, context, final_export_path, reference_path, GAME_SR3, self.export_lods)
 
 # -------------------------------------------------------------------------
 
@@ -241,34 +377,80 @@ class ExportTRRMesh(Operator, ImportHelper):
     def execute(self, context):
         return export_tr_model(self, context, self.head_model, self.filepath)
 
+# -------------------------------------------------------------------------
+
+class ExportAoDRMesh(Operator, ImportHelper):
+    bl_idname = "export_aodr.mesh"
+    bl_label = "Tomb Raider: Angel of Darkness Remastered Mesh (.CHR)"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    filename_ext = ".CHR"
+
+    filter_glob: StringProperty(
+        default="*.CHR",
+        options={'HIDDEN'},
+        maxlen=1024,
+    ) # type: ignore
+
+    filter_glob: StringProperty(
+        default="*.CHR",
+        options={'HIDDEN'},
+        maxlen=1024,
+    ) # type: ignore
+
+    def execute(self, context):
+        return export_tr_model(self, context, self.filepath)
+
 # --------------------------------------------------------------------------------------------------------
         
 def menu_func_import(self, context):
-    self.layout.operator(ImportSRRMesh.bl_idname, text="Soul Reaver I-II Remastered Mesh (.SRM)", icon_value=get_icon_by_id("SRX"))
+    self.layout.operator(ImportSRRMesh.bl_idname, text="Legacy of Kain: Soul Reaver I-II Remastered Mesh (.SRM)", icon_value=get_icon_by_id("SRX"))
+    self.layout.operator(ImportSR3RMesh.bl_idname, text="Legacy of Kain: Defiance Remastered Mesh (.SRM)", icon_value=get_icon_by_id("SR3"))
+
     self.layout.operator(ImportTRRMesh.bl_idname, text="Tomb Raider I-V Remastered Mesh (.TRM)", icon_value=get_icon_by_id("TRX"))
+    self.layout.operator(ImportAoDRMesh.bl_idname, text="Tomb Raider: Angel of Darkness Remastered Mesh (.CHR)", icon_value=get_icon_by_id("TRX"))
 
 def menu_func_export(self, context):
-    self.layout.operator(ExportSRRMesh.bl_idname, text="Soul Reaver I-II Remastered Mesh (.SRM)", icon_value=get_icon_by_id("SRX"))
+    self.layout.operator(ExportSRRMesh.bl_idname, text="Legacy of Kain: Soul Reaver I-II Remastered Mesh (.SRM)", icon_value=get_icon_by_id("SRX"))
+    self.layout.operator(ExportSR3RMesh.bl_idname, text="Legacy of Kain: Defiance Remastered Mesh (.SRM)", icon_value=get_icon_by_id("SR3"))
+
     self.layout.operator(ExportTRRMesh.bl_idname, text="Tomb Raider I-V Remastered Mesh (.TRM)", icon_value=get_icon_by_id("TRX"))
+    self.layout.operator(ExportAoDRMesh.bl_idname, text="Tomb Raider: Angel of Darkness Remastered Mesh (.TRM)", icon_value=get_icon_by_id("TRX"))
 
 # -------------------------------------------------------------------------
 
 def register():
     register_icons()
+
     bpy.utils.register_class(ImportSRRMesh)
+    bpy.utils.register_class(ImportSR3RMesh)
     bpy.utils.register_class(ImportTRRMesh)
+    bpy.utils.register_class(ImportAoDRMesh)
+
     bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
+
     bpy.utils.register_class(ExportSRRMesh)
+    bpy.utils.register_class(ExportSR3RMesh)
     bpy.utils.register_class(ExportTRRMesh)
+    bpy.utils.register_class(ExportAoDRMesh)
+
     bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
 
 def unregister():
     unregister_icons()
+
     bpy.utils.unregister_class(ImportSRRMesh)
+    bpy.utils.unregister_class(ImportSR3RMesh)
     bpy.utils.unregister_class(ImportTRRMesh)
+    bpy.utils.unregister_class(ImportAoDRMesh)
+
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
+
     bpy.utils.unregister_class(ExportSRRMesh)
+    bpy.utils.unregister_class(ExportSR3RMesh)
     bpy.utils.unregister_class(ExportTRRMesh)
+    bpy.utils.unregister_class(ExportAoDRMesh)
+
     bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
 
     # --------------------------------------------------------------------------------------------------------

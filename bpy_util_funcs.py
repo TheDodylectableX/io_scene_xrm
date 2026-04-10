@@ -14,6 +14,16 @@ from typing import cast
 
 # ------------------------
 
+# -----------
+# GAME TYPES
+# -----------
+
+GAME_SRX = 'Soul Reaver I-II'
+"""Used for Legacy of Kain: Soul Reaver I-II."""
+
+GAME_SR3 = 'Defiance'
+"""Used for Legacy of Kain: Defiance."""
+
 # -------------------------------------------------------
 # DETERMINE BLENDER VERSION TO HANDLE THINGS DIFFERENTLY
 # Credit: REDxEYE
@@ -37,7 +47,12 @@ def is_blender_4_1():
 # DATA CONVERSIONS / INVERSIONS
 # ------------------------------
 
-# UV Map inverter for import and export purposes
+# UV Map inverter for import and export purposes.
+def invert_uv_map(uv_set: tuple[float, float]) -> tuple[float, float]:
+    """Invert the V component of a UV Map."""
+    return (uv_set[0], 1 - uv_set[1])
+
+# V component inverter for import and export purposes
 def invert_v(uv_set: int) -> list[float]:
     """Invert the V component of a UV Map."""
     return (1 - uv_set)

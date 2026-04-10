@@ -21,7 +21,7 @@ import time
 from .writers import Writer
 from .bpy_util_funcs import *
 
-def export_sr_model(self, context, file_path: str, reference_srm_path: str) -> set[str]:
+def export_sr_model(self, context, file_path: str, reference_srm_path: str, game: str) -> set[str]:
     """
     Export Blender objects to the SRM format and copying existing skeleton data from original SRMs
     """

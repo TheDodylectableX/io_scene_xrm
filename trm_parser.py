@@ -167,10 +167,10 @@ class TRM():
         zero_count_2 = 0
 
         while reader.offset < reader.length:
-            if reader.ubyte() != 0:
-                reader.seek(reader.tell() - 1)  # Rewind one byte so the next read is correct
+            if reader.ushort() != 0:
+                reader.seek(reader.tell() - 2)  # Rewind one byte so the next read is correct
                 break
-            zero_count_2 += 1
+            zero_count_2 += 2
 
         print(f"Skipped {zero_count_2} padding byte(s)")
 
@@ -186,6 +186,7 @@ class TRM():
         bone_indices = []
         bone_weights = []
         uv = []
+        is_hd_model = "HD" in self.model_file.upper()
 
         for (_) in (range(vertexCount)):
             # -- VERTICES --------------------------
@@ -199,21 +200,34 @@ class TRM():
             id = reader.ubyte()
             material_index.append(id)
 
-            # -- INDICES ---------------------------
-            indices = reader.vec3ub()
-            bone_indices.append(indices)
+            if is_hd_model:
+                # -- INDICES AND WEIGHTS ---------------------------
+                indices = reader.vec3ub()
+                bone_indices.append(indices)
+                weights = reader.vec3ub()
+                bone_weights.append(weights)
 
-            # -- U --------------------------
-            u = reader.ubyte() / 255.0
+                # -- UV MAP --------------------------
+                u = reader.float32()
+                v = invert_v(reader.float32())
 
-            # -- WEIGHTS ---------------------------
-            weights = reader.vec3ub()
-            bone_weights.append(weights)
+                uv.append([u, v])
+            else:
+                # -- INDICES ---------------------------
+                indices = reader.vec3ub()
+                bone_indices.append(indices)
 
-            # -- V --------------------------
-            v = 1 - reader.ubyte() / 255.0
+                # -- U --------------------------
+                u = reader.ubyte() / 255.0
 
-            uv.append([u, v])
+                # -- WEIGHTS ---------------------------
+                weights = reader.vec3ub()
+                bone_weights.append(weights)
+
+                # -- V --------------------------
+                v = 1 - reader.ubyte() / 255.0
+
+                uv.append([u, v])
 
     # --------------------------------------------------------------------------------------------------------
 

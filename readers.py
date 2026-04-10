@@ -54,6 +54,34 @@ class Reader():
         """ Manually set the read position offset at the given position. """
         self.offset = position
 
+    def align(self, boundary: int = 4, strict: bool = False):
+            """
+            Advances the reader's cursor to the next byte boundary to skip structural padding.
+            
+            Parameters:
+            - boundary (int): The byte alignment to reach (usually 4, 8, or 16). Default is 4.
+            - strict (bool): If True, reads the skipped bytes and warns if they aren't nulls (0x00).
+                            Useful for debugging unknown file formats.
+            """
+            current_pos = self.tell()
+            
+            # Calculate exactly how many bytes we need to jump to hit the next boundary.
+            # Example: if pos is 13, and boundary is 4.
+            # (4 - (13 % 4)) % 4  ->  (4 - 1) % 4  ->  3 bytes of padding needed.
+            padding_needed = (boundary - (current_pos % boundary)) % boundary
+            
+            if padding_needed > 0:
+                if strict:
+                    # Read the bytes to ensure we aren't skipping actual data
+                    padding_bytes = self.read_bytes(padding_needed)
+                    
+                    # If any byte in the sequence is not 0x00, throw a warning
+                    if any(b != 0 for b in padding_bytes):
+                        print(f"[WARNING] Alignment skipped non-null data at offset {current_pos}! Expected {padding_needed} null bytes, got: {padding_bytes}")
+                else:
+                    # Fast path: simply fast-forward the cursor over the padding
+                    self.seek(current_pos + padding_needed)
+
     # - - - - - - - - - - - - - - -
     
     def read(self, fmt) -> tuple:
