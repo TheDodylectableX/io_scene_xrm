@@ -144,12 +144,12 @@ class CHR():
             primaryBinormals.append(tuple(b / 127.0 for b in reader.vec3sb()))
             secondaryTangents.append(tuple(t / 127.0 for t in reader.vec3sb()))
             secondaryBinormals.append(tuple(b / 127.0 for b in reader.vec3sb()))
-            bone_weights.append(reader.ushort() / 65535.0)
+            bone_weights.append(reader.short() / 32768.0)
             bone_indices.append(list(reader.read_bytes(2)))
             primaryUV.append(tuple(u / 32768.0 for u in reader.vec2ss()))
 
         faceCount = reader.uint32()
-        faces = [reader.ushort() for _ in range(faceCount)]
+        faces = [reader.ushort() for (_) in range(faceCount)]
 
         subMeshCount = reader.uint32()
         mesh1_submesh_runs = []

@@ -4,7 +4,9 @@
 # IMPORTS
 # --------
 
-import bpy, random
+import bpy
+import bpy.utils.previews
+import random
 from typing import cast
 import math
 import os
@@ -225,7 +227,7 @@ class ImportTRRMesh(Operator, ImportHelper):
 
 class ImportAoDRMesh(Operator, ImportHelper):
     bl_idname = "import_aodr.mesh"
-    bl_label = "Tomb Raider: Angel of Darkness Remastered Mesh (.CHR)"
+    bl_label = "Tomb Raider: Angel of Darkness (Remastered) Mesh (.CHR)"
     bl_options = {'REGISTER', 'UNDO'}
 
     filename_ext = ".CHR"
@@ -256,6 +258,22 @@ class ImportAoDRMesh(Operator, ImportHelper):
 
     def execute(self, context):
        return import_aodr_model(self.filepath, self.custom_normals, self.assign_material_colors, self.import_textures)
+
+class ImportAoDRMorph(Operator, ImportHelper):
+    bl_idname = "import_aodr.morph"
+    bl_label = "Tomb Raider: Angel of Darkness (Remastered) Morph Target (.TMT)"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    filename_ext = ".TMT"
+
+    filter_glob: StringProperty(
+        default="*.TMT",
+        options={'HIDDEN'},
+        maxlen=1024,
+    ) # type: ignore
+
+    def execute(self, context):
+       return import_aodr_morph(self.filepath)
 
 # --------------------------------------------------------------------------------------------------------
 
@@ -374,14 +392,20 @@ class ExportTRRMesh(Operator, ImportHelper):
         default=False,
     ) # type: ignore
 
+    hd_model: BoolProperty(
+        name="HD Model",
+        description="Export as a Magic Media HD model instead.",
+        default=False,
+    ) # type: ignore
+
     def execute(self, context):
-        return export_tr_model(self, context, self.head_model, self.filepath)
+        return export_tr_model(self, context, self.filepath, self.head_model)
 
 # -------------------------------------------------------------------------
 
 class ExportAoDRMesh(Operator, ImportHelper):
     bl_idname = "export_aodr.mesh"
-    bl_label = "Tomb Raider: Angel of Darkness Remastered Mesh (.CHR)"
+    bl_label = "Tomb Raider: Angel of Darkness (Remastered) Mesh (.CHR)"
     bl_options = {'REGISTER', 'UNDO'}
 
     filename_ext = ".CHR"
@@ -403,54 +427,113 @@ class ExportAoDRMesh(Operator, ImportHelper):
 
 # --------------------------------------------------------------------------------------------------------
         
-def menu_func_import(self, context):
-    self.layout.operator(ImportSRRMesh.bl_idname, text="Legacy of Kain: Soul Reaver I-II Remastered Mesh (.SRM)", icon_value=get_icon_by_id("SRX"))
-    self.layout.operator(ImportSR3RMesh.bl_idname, text="Legacy of Kain: Defiance Remastered Mesh (.SRM)", icon_value=get_icon_by_id("SR3"))
+# ========================
+# SUBMENU CREATION
+# ========================
 
-    self.layout.operator(ImportTRRMesh.bl_idname, text="Tomb Raider I-V Remastered Mesh (.TRM)", icon_value=get_icon_by_id("TRX"))
-    self.layout.operator(ImportAoDRMesh.bl_idname, text="Tomb Raider: Angel of Darkness Remastered Mesh (.CHR)", icon_value=get_icon_by_id("TRX"))
+# --- IMPORT MENUS ---
+class IMPORT_MT_lok_remasters(bpy.types.Menu):
+    bl_idname = "IMPORT_MT_lok_remasters"
+    bl_label = "Legacy of Kain Remasters"
 
-def menu_func_export(self, context):
-    self.layout.operator(ExportSRRMesh.bl_idname, text="Legacy of Kain: Soul Reaver I-II Remastered Mesh (.SRM)", icon_value=get_icon_by_id("SRX"))
-    self.layout.operator(ExportSR3RMesh.bl_idname, text="Legacy of Kain: Defiance Remastered Mesh (.SRM)", icon_value=get_icon_by_id("SR3"))
+    def draw(self, context):
+        layout = self.layout
+        layout.operator(ImportSRRMesh.bl_idname, text="Soul Reaver I-II Mesh (.SRM)", icon_value=get_icon_by_id("SRX"))
+        layout.operator(ImportSR3RMesh.bl_idname, text="Defiance Mesh (.SRM)", icon_value=get_icon_by_id("SR3"))
+class IMPORT_MT_tr_remasters(bpy.types.Menu):
+    bl_idname = "IMPORT_MT_tr_remasters"
+    bl_label = "Tomb Raider Remasters"
 
-    self.layout.operator(ExportTRRMesh.bl_idname, text="Tomb Raider I-V Remastered Mesh (.TRM)", icon_value=get_icon_by_id("TRX"))
-    self.layout.operator(ExportAoDRMesh.bl_idname, text="Tomb Raider: Angel of Darkness Remastered Mesh (.TRM)", icon_value=get_icon_by_id("TRX"))
+    def draw(self, context):
+        layout = self.layout
+        layout.operator(ImportTRRMesh.bl_idname, text="Tomb Raider I-V Mesh (.TRM)", icon_value=get_icon_by_id("TRX"))
+        layout.operator(ImportAoDRMesh.bl_idname, text="Angel of Darkness Mesh (.CHR)", icon_value=get_icon_by_id("TRX"))
+        layout.operator(ImportAoDRMorph.bl_idname, text="Angel of Darkness Morph Target (.TMT)", icon_value=get_icon_by_id("TRX"))
 
-# -------------------------------------------------------------------------
+# --- EXPORT MENUS ---
+class EXPORT_MT_lok_remasters(bpy.types.Menu):
+    bl_idname = "EXPORT_MT_lok_remasters"
+    bl_label = "Legacy of Kain Remasters"
 
+    def draw(self, context):
+        layout = self.layout
+        layout.operator(ExportSRRMesh.bl_idname, text="Soul Reaver I-II Mesh (.SRM)", icon_value=get_icon_by_id("SRX"))
+        layout.operator(ExportSR3RMesh.bl_idname, text="Defiance Mesh (.SRM)", icon_value=get_icon_by_id("SR3"))
+class EXPORT_MT_tr_remasters(bpy.types.Menu):
+    bl_idname = "EXPORT_MT_tr_remasters"
+    bl_label = "Tomb Raider Remasters"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator(ExportTRRMesh.bl_idname, text="Tomb Raider I-V Mesh (.TRM)", icon_value=get_icon_by_id("TRX"))
+        layout.operator(ExportAoDRMesh.bl_idname, text="Angel of Darkness Mesh (.CHR)", icon_value=get_icon_by_id("TRX"))
+
+# ========================
+# MENU APPEND FUNCTIONS
+# ========================
+def menu_func_import_lok(self, context):
+    self.layout.menu(IMPORT_MT_lok_remasters.bl_idname, icon_value=get_icon_by_id("SRX"))
+def menu_func_import_tr(self, context):
+    self.layout.menu(IMPORT_MT_tr_remasters.bl_idname, icon_value=get_icon_by_id("TRX"))
+
+def menu_func_export_lok(self, context):
+    self.layout.menu(EXPORT_MT_lok_remasters.bl_idname, icon_value=get_icon_by_id("SRX"))
+def menu_func_export_tr(self, context):
+    self.layout.menu(EXPORT_MT_tr_remasters.bl_idname, icon_value=get_icon_by_id("TRX"))
+
+# ========================
+# CLASS REGISTRATION TUPLE
+# ========================
+# Add all new Operators, Menus, and Panels here. 
+# They will automatically be registered and unregistered.
+classes = (
+    ImportSRRMesh,
+    ImportSR3RMesh,
+    ImportTRRMesh,
+    ImportAoDRMesh,
+    ImportAoDRMorph,
+
+    ExportSRRMesh,
+    ExportSR3RMesh,
+    ExportTRRMesh,
+    ExportAoDRMesh,
+
+    IMPORT_MT_lok_remasters,
+    IMPORT_MT_tr_remasters,
+    EXPORT_MT_lok_remasters,
+    EXPORT_MT_tr_remasters,
+)
+
+# ========================
+# REGISTRATION
+# ========================
 def register():
     register_icons()
 
-    bpy.utils.register_class(ImportSRRMesh)
-    bpy.utils.register_class(ImportSR3RMesh)
-    bpy.utils.register_class(ImportTRRMesh)
-    bpy.utils.register_class(ImportAoDRMesh)
+    # Dynamically register all classes in the tuple
+    for cls in classes:
+        bpy.utils.register_class(cls)
 
-    bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
+    # Append custom submenus to Blender's native File > Import/Export menus
+    bpy.types.TOPBAR_MT_file_import.append(menu_func_import_lok)
+    bpy.types.TOPBAR_MT_file_import.append(menu_func_import_tr)
+    
+    bpy.types.TOPBAR_MT_file_export.append(menu_func_export_lok)
+    bpy.types.TOPBAR_MT_file_export.append(menu_func_export_tr)
 
-    bpy.utils.register_class(ExportSRRMesh)
-    bpy.utils.register_class(ExportSR3RMesh)
-    bpy.utils.register_class(ExportTRRMesh)
-    bpy.utils.register_class(ExportAoDRMesh)
-
-    bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
 
 def unregister():
+    # Remove custom submenus from Blender's native menus first
+    bpy.types.TOPBAR_MT_file_import.remove(menu_func_import_lok)
+    bpy.types.TOPBAR_MT_file_import.remove(menu_func_import_tr)
+    
+    bpy.types.TOPBAR_MT_file_export.remove(menu_func_export_lok)
+    bpy.types.TOPBAR_MT_file_export.remove(menu_func_export_tr)
+
+    # Dynamically unregister all classes in reverse order to prevent dependency conflicts
+    for cls in reversed(classes):
+        bpy.utils.unregister_class(cls)
+
     unregister_icons()
-
-    bpy.utils.unregister_class(ImportSRRMesh)
-    bpy.utils.unregister_class(ImportSR3RMesh)
-    bpy.utils.unregister_class(ImportTRRMesh)
-    bpy.utils.unregister_class(ImportAoDRMesh)
-
-    bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
-
-    bpy.utils.unregister_class(ExportSRRMesh)
-    bpy.utils.unregister_class(ExportSR3RMesh)
-    bpy.utils.unregister_class(ExportTRRMesh)
-    bpy.utils.unregister_class(ExportAoDRMesh)
-
-    bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
 
     # --------------------------------------------------------------------------------------------------------

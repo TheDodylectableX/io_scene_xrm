@@ -9,22 +9,14 @@ import os
 import bpy
 import time
 
-from .writers import *
-from .bpy_util_funcs import *
-
-EXPORTER_SHADER_COUNT = 1
-
-import os
-import bpy
-import struct
-import time
 from .writers import Writer
 from .bpy_util_funcs import *
 
+EXPORTER_SHADER_COUNT = 1
+MAX_FACE_COUNT = 65535
+
 def export_sr_model(self, context, file_path: str, reference_srm_path: str, game: str) -> set[str]:
-    """
-    Export Blender objects to the SRM format and copying existing skeleton data from original SRMs
-    """
+    """Export Blender objects to the SRM format and copying existing skeleton data from original SRMs."""
     start_time = time.time()
     print(f"\nStarting Export to: {file_path}...")
 
@@ -275,7 +267,7 @@ def export_sr_model(self, context, file_path: str, reference_srm_path: str, game
         self.report({'ERROR'}, f"Export failed: {str(e)}")
         return {'CANCELLED'}
 
-def export_tr_model(self, context, is_head_model: bool, file_path: str) -> set[str]:
+def export_tr_model(self, context, file_path: str, is_head_model: bool, is_hd_model: bool) -> set[str]:
     """Export Blender objects into TRR's model format."""
     start_time = time.time()
 
@@ -437,8 +429,6 @@ def export_tr_model(self, context, is_head_model: bool, file_path: str) -> set[s
 
             # --- ARMATURE BLOCK (Only for HEAD models) ---
             # if is_head_model:
-            #     # Logic derived from your 010 template port
-            #     # We write a dummy 0 for now unless you have armature data to inject
             writer.uint32(0) # BoneCount
 
             # COUNTS
@@ -459,17 +449,28 @@ def export_tr_model(self, context, is_head_model: bool, file_path: str) -> set[s
                 # Material Index
                 writer.ubyte(v['mat_id'])
 
-                # Bone Indices
-                writer.vec3ub(v['bone_idx'])
+                if is_hd_model:
+                    # Bone Indices
+                    writer.vec3ub(v['bone_idx'])
+            
+                    # Bone Weights
+                    writer.vec3ub(v['bone_weight'])
 
-                # U
-                writer.ubyte(int(v['uv'][0] * 255) % 256)
+                    # UV Map
+                    writer.float32(v['uv'][0])
+                    writer.float32(1.0 - v['uv'][1])
+                else:
+                    # Bone Indices
+                    writer.vec3ub(v['bone_idx'])
 
-                # Weights
-                writer.vec3ub(v['bone_weight'])
+                    # U Component
+                    writer.ubyte(int(v['uv'][0] * 255) % 256)
 
-                # V
-                writer.ubyte(int((1.0 - v['uv'][1]) * 255) % 256)
+                    # Weights
+                    writer.vec3ub(v['bone_weight'])
+
+                    # V Component
+                    writer.ubyte(int((1.0 - v['uv'][1]) * 255) % 256)
 
         print(f"Successfully exported {len(total_vertices)} vertices.")
         return {'FINISHED'}
