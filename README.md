@@ -13,15 +13,13 @@ A Blender 3.X/4.X+ **work-in-progress** plugin to import and export models for L
 | Game              | File Type  | Importable? | Exportable? |
 | ----------------- | ---------- | ----------- | ----------- |
 | Tomb Raider I-V   | .TRM       | Yes         | Yes¹        |
-| Angel of Darkness | .CHR, .TMT | No²         | No          |
+| Angel of Darkness | .CHR, .TMT | Yes         | No          |
 | Soul Reaver I-II  | .SRM       | Yes         | Yes         |
-| Defiance          | .SRM       | Yes         | No³         |
+| Defiance          | .SRM       | Yes         | No²         |
 
 ¹: Magic Media's HD format isn't supported at the moment, Expect it in a later update.
 
-²: Importer pipeline is incomplete, Only parser is functional.
-
-³: Not supported at the moment, Expect it in a later update.
+²: Not supported at the moment, Expect it in a later update.
 
 # Quick Model Export Instructions:
 ### You're limited to 65535 triangles in total and there's no limit to how many materials you can have
