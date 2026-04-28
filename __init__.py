@@ -399,7 +399,7 @@ class ExportTRRMesh(Operator, ImportHelper):
     ) # type: ignore
 
     def execute(self, context):
-        return export_tr_model(self, context, self.filepath, self.head_model)
+        return export_tr_model(self, context, self.filepath, self.head_model, self.hd_model)
 
 # -------------------------------------------------------------------------
 
